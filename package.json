@@ -1,0 +1,11 @@
+{
+  "name": "meloscribe_audio",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/catherinemei/meloscribe_audio.git",
+  "author": "Grace H <gracefh@mit.edu>",
+  "license": "MIT",
+  "dependencies": {
+    "csv-parse": "^5.3.8"
+  }
+}
