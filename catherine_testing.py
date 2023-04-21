@@ -100,10 +100,11 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
         average_freq = np.average(window_freqs)
         note = librosa.hz_to_note(average_freq)
         note_freq = librosa.note_to_hz(note)
-
-        note_info.append((window_times[0], window_times[-1], note_freq, note, window_freqs))
+        note_midi = librosa.note_to_midi(note)
+        note_info.append((window_times[0], window_times[-1], note_freq, note, note_midi, window_freqs))
         note_obj = "{ start_sec: " + str(window_times[0]) + ", end_sec: " + str(
-            window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_name: '" + note + "' }, "
+            window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
+            note_midi) + ", note_name: '" + note + "' }, "
         json_obj_str += note_obj
 
     # take care of last note
@@ -115,9 +116,10 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
             average_freq = np.average(window_freqs)
             note = librosa.hz_to_note(average_freq)
             note_freq = librosa.note_to_hz(note)
-            note_info.append((window_times[0], window_times[-1], note_freq, note, window_freqs))
+            note_midi = librosa.note_to_midi(note)
+            note_info.append((window_times[0], window_times[-1], note_freq, note, note_midi, window_freqs))
             note_obj = "{ start_sec: " + str(window_times[0]) + ", end_sec: " + str(
-                window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_name: '" + note + "' }];"
+                window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(note_midi) + ", note_name: '" + note + "' }]; "
             json_obj_str += note_obj
         else:
             json_obj_str += "];"
@@ -127,7 +129,7 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
     f.close()
 
     # make dataframe and CSV of information
-    df_notes = pd.DataFrame(note_info, columns=['start_sec', 'end_sec', 'note_freq_hz', 'note_name', 'included_freqs'])
+    df_notes = pd.DataFrame(note_info, columns=['start_sec', 'end_sec', 'note_freq_hz', 'note_name', 'midi_note', 'included_freqs'])
 
     return df_notes, note_info
 
@@ -166,13 +168,18 @@ def generate_wav(notes_list, sample_rate, file_name):
     for note in notes_list:
         start_time, end_time, note_freq = note[0], note[1], note[2]
 
+        T = end_time - start_time
+        n = int(sample_rate * T)  # number of samples
+        t = np.arange(n) / sample_rate  # grid of time values
+        x = np.sin(2 * np.pi * note_freq * t)
+
         frames[int(start_time * sample_rate): int(end_time * sample_rate)] = note_freq
 
     wavio.write(f'regenerated_wav/{file_name}', frames, sample_rate, sampwidth=3)
 
 
-y, sr = librosa.load("audio_files/birthday.wav")
-# y, sr = librosa.load("audio_files/twinkle.wav")
+# y, sr = librosa.load("audio_files/birthday.wav")
+y, sr = librosa.load("audio_files/twinkle.wav")
 
 # Identify fundamental frequency
 f0, voiced_flag, voiced_probs = librosa.pyin(y, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'), sr=sr)
@@ -194,7 +201,7 @@ final_beats = combine_onset_times(onsets, beats)
 
 notes_df, notes_info = segment_notes(final_beats, f0s, f0_times, 'birthday_notes.js')
 
-# notes_df.to_csv('twinkle.csv')
-notes_df.to_csv('birthday.csv')
+notes_df.to_csv('twinkle.csv')
+# notes_df.to_csv('birthday.csv')
 
 # generate_wav(notes_info, sr, 'twinkle_regenerated.wav')
