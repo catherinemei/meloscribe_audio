@@ -178,8 +178,8 @@ def generate_wav(notes_list, sample_rate, file_name):
     wavio.write(f'regenerated_wav/{file_name}', frames, sample_rate, sampwidth=3)
 
 
-# y, sr = librosa.load("audio_files/birthday.wav")
-y, sr = librosa.load("audio_files/twinkle.wav")
+y, sr = librosa.load("audio_files/birthday.wav")
+# y, sr = librosa.load("audio_files/twinkle.wav")
 
 # Identify fundamental frequency
 f0, voiced_flag, voiced_probs = librosa.pyin(y, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'), sr=sr)
@@ -199,9 +199,9 @@ tempo, beats = librosa.beat.beat_track(y=y, sr=sr, units='time')
 final_beats = combine_onset_times(onsets, beats)
 # plot_beats(y, final_beats)
 
-notes_df, notes_info = segment_notes(final_beats, f0s, f0_times, 'birthday_notes.js')
+notes_df, notes_info = segment_notes(final_beats, f0s, f0_times, 'birthday.js')
 
-notes_df.to_csv('twinkle.csv')
-# notes_df.to_csv('birthday.csv')
+# notes_df.to_csv('twinkle.csv')
+notes_df.to_csv('birthday.csv')
 
 # generate_wav(notes_info, sr, 'twinkle_regenerated.wav')
