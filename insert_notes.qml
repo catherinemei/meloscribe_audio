@@ -1,7 +1,7 @@
 import MuseScore 3.0
 import QtQuick 2.9
 import FileIO 3.0
-import "notes.js" as Notes
+import "js_files_notes/birthday.js" as Notes
 
 
 MuseScore {
@@ -23,13 +23,14 @@ MuseScore {
     const tempo = c.tempo;
     for (var i = 0; i < Notes.notes.length; i++) {
     var note = Notes.notes[i];
-      durationPairs.push({duration: Math.floor(( note.end_sec - note.start_sec ) * 16 / tempo)});
+    console.log(note.note_midi);
+      durationPairs.push({duration: Math.round(( note.end_sec - note.start_sec ) * 16 / tempo), note: note.note_midi});
     }
     
     for (var i = 0; i < Notes.notes.length; i++) {
     var pair = durationPairs[i];
       c.setDuration(pair.duration , 16);
-       c.addNote(64, false); // c.addNote(60,true) to insert note to chord
+       c.addNote(pair.note, false); // c.addNote(60,true) to insert note to chord
     }
     
     console.log(c.tempo);
