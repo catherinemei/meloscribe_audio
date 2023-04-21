@@ -2,6 +2,8 @@ import librosa
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import wave
+import struct
 
 
 def plot_beats(sound_y, beats):
@@ -42,7 +44,8 @@ def process_fundamental_freqs(f0s, f0_times):
     Given the fundamental frequencies and corresponding times, remove all nans from list
     :param f0s: list of fundamental frequencies
     :param f0_times: list of times corresponding to the fundamental frequencies
-    :return: f0s and f0_times with nan values filtered out
+    :return: f0s and f0_times with nan values filtered out; raw note information list
+    Writes js file with JSON object of the notes
     """
     new_f0s = []
     new_times = []
@@ -55,19 +58,20 @@ def process_fundamental_freqs(f0s, f0_times):
     return new_f0s, new_times
 
 
-def segment_notes(note_onsets, f0s, f0_times):
+def segment_notes(note_onsets, f0s_freq, f0_time):
     """
     Given a list of onsets and all of the fundamental frequencies and timestamps of those frequencies,
     generate a CSV with the start and end timestamps of a note as well as the note frequency and letter
     :param note_onsets: estimated beat event locations in time (seconds)
-    :param f0s: fundamental frequencies
-    :param f0_times: times that the fundamental frequences occur
-    :return: pandas Dataframe
+    :param f0s_freq: fundamental frequencies
+    :param f0_time: times that the fundamental frequences occur
+    :return: pandas Dataframe and raw note_info list
     """
 
     # (timestamp start, timestamp end, note frequency, note letter, frequencies included)
     note_info = []
     freq_pt = 0
+    json_obj_str = "export let notes = ["
 
     for t in range(len(note_onsets) - 1):
         window_start = note_onsets[t]
@@ -76,17 +80,17 @@ def segment_notes(note_onsets, f0s, f0_times):
         window_times = []
 
         # note is after this window, then skip
-        if freq_pt < len(f0_times) and f0_times[freq_pt] > window_end:
+        if freq_pt < len(f0_time) and f0_time[freq_pt] > window_end:
             continue
 
         # note is before this window started, then fast forward
-        while freq_pt < len(f0_times) and f0_times[freq_pt] < window_start:
+        while freq_pt < len(f0_time) and f0_time[freq_pt] < window_start:
             freq_pt += 1
 
         # add notes in window
-        while freq_pt < len(f0_times) and f0_times[freq_pt] < window_end:
-            window_freqs.append(f0s[freq_pt])
-            window_times.append(f0_times[freq_pt])
+        while freq_pt < len(f0_time) and f0_time[freq_pt] < window_end:
+            window_freqs.append(f0s_freq[freq_pt])
+            window_times.append(f0_time[freq_pt])
             freq_pt += 1
 
         # window is too short, doesn't contain any notes
@@ -98,31 +102,81 @@ def segment_notes(note_onsets, f0s, f0_times):
         note_freq = librosa.note_to_hz(note)
 
         note_info.append((window_times[0], window_times[-1], note_freq, note, window_freqs))
+        note_obj = "{ start_sec: " + str(window_times[0]) + ", end_sec: " + str(
+            window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_name: '" + note + "' }, "
+        json_obj_str += note_obj
 
     # take care of last note
-    if freq_pt < len(f0_times):
-        window_freqs = f0s[freq_pt:]
-        window_times = f0_times[freq_pt:]
+    if freq_pt < len(f0_time):
+        window_freqs = f0s_freq[freq_pt:]
+        window_times = f0_time[freq_pt:]
 
         if len(window_freqs) >= 2:
             average_freq = np.average(window_freqs)
             note = librosa.hz_to_note(average_freq)
             note_freq = librosa.note_to_hz(note)
             note_info.append((window_times[0], window_times[-1], note_freq, note, window_freqs))
+            note_obj = "{ start_sec: " + str(window_times[0]) + ", end_sec: " + str(
+                window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_name: '" + note + "' }]"
+            json_obj_str += note_obj
+        else:
+            json_obj_str += "]"
+
+    f = open("notes.js", "w")
+    f.write(json_obj_str)
+    f.close()
 
     # make dataframe and CSV of information
     df_notes = pd.DataFrame(note_info, columns=['start_sec', 'end_sec', 'note_freq_hz', 'note_name', 'included_freqs'])
-    return df_notes
+
+    return df_notes, note_info
+
+
+def combine_onset_times(onset_detect, beat_track):
+    """
+    Given onset times found using onset.onset_detect and beat.beat_track,
+    combine the two sets of information so that beat_track has the last onset time
+    :param onset_detect: list of onset times as outputted by onset.onset_detect
+    :param beat_track: list of onset times as outputted by beat.beat_track
+    :return: combined onset times
+    """
+    last_beat = beat_track[-1]
+    pt = 0
+
+    while pt < len(onset_detect) and onset_detect[pt] < last_beat:
+        pt += 1
+
+    beat_onsets = list(beat_track) + list(onset_detect[pt:])
+
+    return beat_onsets
+
+
+def generate_wav(notes_list, sample_rate, file_name):
+    wave_file = wave.open(file_name, 'w')
+
+    wave_file.setnchannels(1)  # mono
+    wave_file.setframerate(sample_rate)
+    wave_file.setsampwidth(2)
+
+    for note in notes_list:
+        start_time, end_time, note_freq = note[0], note[1], note[2]
+
+        frame_start = librosa.time_to_frames(start_time, sr=sample_rate)
+        frame_end = librosa.time_to_frames(end_time, sr=sample_rate)
+
+        for f in range(frame_start, frame_end + 1):
+            data = struct.pack('<h', int(note_freq))
+            wave_file.writeframesraw(data)
+
+    wave_file.close()
 
 
 if __name__ == "__main__":
-
     y, sr = librosa.load("audio_files/birthday.wav")
 
     # Identify fundamental frequency
     f0, voiced_flag, voiced_probs = librosa.pyin(y, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'), sr=sr)
     times = librosa.times_like(f0)
-
     f0s, f0_times = process_fundamental_freqs(f0, times)
     plot_fundamental_freqs(y, f0)
 
@@ -135,16 +189,12 @@ if __name__ == "__main__":
     # plot_beats(y, beats)
 
     # librosa.beat.beat_track misses last onset, get that information from onsets and combine the two
-    last_beat = beats[-1]
-    pt = 0
+    final_beats = combine_onset_times(onsets, beats)
+    plot_beats(y, final_beats)
 
-    while pt < len(onsets) and onsets[pt] < last_beat:
-        pt += 1
-
-    beat_onsets = list(beats) + list(onsets[pt:])
-    plot_beats(y, beat_onsets)
-
-    notes_df = segment_notes(beat_onsets, f0s, f0_times)
+    notes_df, notes_info = segment_notes(final_beats, f0s, f0_times)
 
     # notes_df.to_csv('twinkle.csv')
     notes_df.to_csv('birthday.csv')
+
+    generate_wav(notes_info, sr, 'birthday_regenerated.wav')
