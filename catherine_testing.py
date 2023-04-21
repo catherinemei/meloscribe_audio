@@ -173,8 +173,8 @@ def generate_wav(notes_list, sample_rate, file_name):
         t = np.arange(n) / sample_rate  # grid of time values
         x = np.sin(2 * np.pi * note_freq * t)
 
-        frames[int(start_time * sample_rate): int(end_time * sample_rate)] = note_freq
-
+        for f in range(int(start_time * sample_rate), int(start_time * sample_rate) + len(x) + 1):
+            frames[f] = x[f]
     wavio.write(f'regenerated_wav/{file_name}', frames, sample_rate, sampwidth=3)
 
 
@@ -199,9 +199,9 @@ tempo, beats = librosa.beat.beat_track(y=y, sr=sr, units='time')
 final_beats = combine_onset_times(onsets, beats)
 # plot_beats(y, final_beats)
 
-notes_df, notes_info = segment_notes(final_beats, f0s, f0_times, 'birthday.js')
+notes_df, notes_info = segment_notes(onsets, f0s, f0_times, 'birthday_onset.js')
 
 # notes_df.to_csv('twinkle.csv')
 notes_df.to_csv('birthday.csv')
 
-# generate_wav(notes_info, sr, 'twinkle_regenerated.wav')
+# generate_wav(notes_info, sr, 'birthday.wav')
