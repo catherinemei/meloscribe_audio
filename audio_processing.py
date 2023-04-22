@@ -210,7 +210,7 @@ final_beats = combine_onset_times(onsets, beats)
 
 notes_df, notes_info = segment_notes(final_beats, f0s, f0_times, 'recording.js')
 
-notes_df.to_csv('recording.csv')
+notes_df.to_csv('notes_summary_csv/recording.csv')
 # notes_df.to_csv('birthday.csv')
 
 # generate_wav(notes_info, sr, 'birthday_regenerated.wav')

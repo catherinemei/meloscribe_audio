@@ -96,6 +96,3 @@ def launch_voice_recorder():
     canvas.create_window(POPUP_WIDTH // 2, 350, window=record_button)
 
     window.mainloop()
-
-
-launch_voice_recorder()
