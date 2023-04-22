@@ -45,7 +45,7 @@ def launch_voice_recorder():
                 counter += 1
                 progress_label.config(text=str(counter))
             sd.wait()
-            file_name = 'recording.wav'
+            file_name = 'audio_files/recording.wav'
             write(file_name, freq, recording)
             showinfo('Recording complete', 'Your recording is complete')
         except:
