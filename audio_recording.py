@@ -60,7 +60,7 @@ def launch_voice_recorder():
             sd.play(stacked, freq)
 
             # Indicate how many seconds left before recording starts
-            time_left_before_start = click_track_duration + 1
+            time_left_before_start = click_track_duration
             while time_left_before_start > 0:
                 window.update()
                 time.sleep(1)

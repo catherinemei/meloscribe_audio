@@ -215,3 +215,4 @@ notes_df.to_csv('notes_summary_csv/recording.csv')
 
 # generate_wav(notes_info, sr, 'birthday_regenerated.wav')
 # generate_wav(notes_info, sr, 'twinkle_regenerated.wav')
+generate_wav(notes_info, sr, 'recording_regenerated.wav')
