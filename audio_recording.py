@@ -1,4 +1,6 @@
 import sounddevice as sd
+import librosa
+import numpy as np
 from scipy.io.wavfile import write
 from tkinter import *
 from tkinter import ttk
@@ -37,13 +39,42 @@ def launch_voice_recorder():
         try:
             freq = 44100
             duration = int(duration_entry.get())
+
+            # make click track
+            click_track_duration = 8
+            amp = 2
+            metronome_tempo = int(metronome_entry.get())
+            interval_between_beats = 60 / metronome_tempo
+            num_beats = int(click_track_duration / interval_between_beats) + 1
+            click_times = [i * interval_between_beats for i in range(num_beats)]
+            click_track = librosa.clicks(times=click_times, sr=freq)
+            click_track = click_track * amp
+
+            # make starting tone
+            tone = tone_entry.get()
+            note_freq = librosa.note_to_hz(tone)
+            starting_tone = librosa.tone(note_freq, sr=freq, length=len(click_track))
+
+            # combine click track and starting tone
+            stacked = click_track + starting_tone
+            sd.play(stacked, freq)
+
+            # Indicate how many seconds left before recording starts
+            time_left_before_start = click_track_duration + 1
+            while time_left_before_start > 0:
+                window.update()
+                time.sleep(1)
+                time_left_before_start -= 1
+                progress_label.config(text="Start Recording in: " + str(time_left_before_start))
+
+            sd.wait()
             recording = sd.rec(duration * freq, samplerate=freq, channels=2)
             counter = 0
             while counter < duration:
                 window.update()
                 time.sleep(1)
                 counter += 1
-                progress_label.config(text=str(counter))
+                progress_label.config(text="Recording Timer: " + str(counter))
             sd.wait()
             file_name = 'audio_files/recording.wav'
             write(file_name, freq, recording)
@@ -56,7 +87,7 @@ def launch_voice_recorder():
                                              'value')
 
     ####### CREATE WIDGET #######
-    POPUP_HEIGHT = 400
+    POPUP_HEIGHT = 600
     POPUP_WIDTH = 400
     LOGO_WIDTH = 250
     LOGO_HEIGHT = 85
@@ -87,12 +118,24 @@ def launch_voice_recorder():
     duration_label = ttk.Label(window, text='Duration (in sec)')
     duration_entry = ttk.Entry(window, width=14, style='TEntry')
     canvas.create_window(POPUP_WIDTH // 2, 200, window=duration_label)
-    canvas.create_window(POPUP_WIDTH // 2, 250, window=duration_entry)
+    canvas.create_window(POPUP_WIDTH // 2, 225, window=duration_entry)
+
+    # Create input for metronome
+    metronome_label = ttk.Label(window, text='Metronome Tempo')
+    metronome_entry = ttk.Entry(window, width=14, style='TEntry')
+    canvas.create_window(POPUP_WIDTH // 2, 300, window=metronome_label)
+    canvas.create_window(POPUP_WIDTH // 2, 325, window=metronome_entry)
+
+    # Create a box to enter note for starting tone
+    tone_label = ttk.Label(window, text='Starting Note')
+    tone_entry = ttk.Entry(window, width=14, style='TEntry')
+    canvas.create_window(POPUP_WIDTH // 2, 400, window=tone_label)
+    canvas.create_window(POPUP_WIDTH // 2, 425, window=tone_entry)
 
     # Create progress bar and recording button
-    progress_label = ttk.Label(window, text='')
+    progress_label = ttk.Label(window, text="Press Record to Start!")
     record_button = ttk.Button(window, text='Record', style='TButton', command=recording_thread)
-    canvas.create_window(POPUP_WIDTH // 2, 300, window=progress_label)
-    canvas.create_window(POPUP_WIDTH // 2, 350, window=record_button)
+    canvas.create_window(POPUP_WIDTH // 2, 500, window=progress_label)
+    canvas.create_window(POPUP_WIDTH // 2, 550, window=record_button)
 
     window.mainloop()
