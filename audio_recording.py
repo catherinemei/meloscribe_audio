@@ -41,11 +41,13 @@ def launch_voice_recorder():
             duration = int(duration_entry.get())
 
             # make click track
-            click_track_duration = 8
+            # click_track_duration = 8
             amp = 2
             metronome_tempo = int(metronome_entry.get())
             interval_between_beats = 60 / metronome_tempo
-            num_beats = int(click_track_duration / interval_between_beats) + 1
+            # num_beats = int(click_track_duration / interval_between_beats) + 1
+            num_beats = 8
+            click_track_duration = int(interval_between_beats * num_beats)
             click_times = [i * interval_between_beats for i in range(num_beats)]
             click_track = librosa.clicks(times=click_times, sr=freq)
             click_track = click_track * amp
@@ -68,7 +70,7 @@ def launch_voice_recorder():
                 progress_label.config(text="Start Recording in: " + str(time_left_before_start))
 
             sd.wait()
-            recording = sd.rec(duration * freq, samplerate=freq, channels=2)
+            recording = sd.rec(duration * freq, samplerate=freq, channels=1)
             counter = 0
             while counter < duration:
                 window.update()
@@ -139,3 +141,5 @@ def launch_voice_recorder():
     canvas.create_window(POPUP_WIDTH // 2, 550, window=record_button)
 
     window.mainloop()
+
+launch_voice_recorder()
