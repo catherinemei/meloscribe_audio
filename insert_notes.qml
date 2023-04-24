@@ -24,7 +24,9 @@ MuseScore {
       proc.waitForFinished(300000);
       console.log(proc.readAllStandardOutput());
       // proc.start("source /Users/20gracehuang/Downloads/Documents/MIT\ Files/2023-spring-classes/6.8510/meloscribe_audio/run_script.sh");
-      proc.start("bash", ["-c", "source \"/Users/20gracehuang/Downloads/Documents/MIT\ Files/2023-spring-classes/6.8510/meloscribe_audio/run_script.sh\""]);
+      // proc.start('bash -c "source /Users/20gracehuang/Downloads/Documents/MIT\ Files/2023-spring-classes/6.8510/meloscribe_audio/run_script.sh"');
+       proc.start('bash -c "/Users/20gracehuang/Downloads/Documents/MIT\ Files/2023-spring-classes/6.8510/meloscribe_audio/venv/bin/python3 /Users/20gracehuang/Downloads/Documents/MIT\ Files/2023-spring-classes/6.8510/meloscribe_audio/audio_processing.py"');
+      // proc.start('bash -c ls');
       var venv = proc.waitForFinished(-1);
       console.log(venv);
       console.log("Output", proc.readAllStandardOutput());

@@ -8,6 +8,7 @@ from tkinter.messagebox import showinfo, showerror, askokcancel
 from PIL import ImageTk, Image
 import time
 import threading
+import os
 
 # heavily based on https://www.thepythoncode.com/article/make-a-gui-voice-recorder-python
 
@@ -38,6 +39,8 @@ def launch_voice_recorder():
         """
         try:
             freq = 44100
+
+            
             duration = int(duration_entry.get())
 
             # make click track
@@ -111,7 +114,7 @@ def launch_voice_recorder():
     # Creating picture for recording widget
     canvas = Canvas(window, width=POPUP_WIDTH, height=POPUP_HEIGHT)
     canvas.pack()
-    logo = Image.open("record.png")
+    logo = Image.open(os.path.dirname(os.path.realpath(__file__)) + "/record.png")
     logo = logo.resize((LOGO_WIDTH, LOGO_HEIGHT))  # width, height
     logo = ImageTk.PhotoImage(logo)
     canvas.create_image(POPUP_WIDTH // 2, 100, image=logo)
