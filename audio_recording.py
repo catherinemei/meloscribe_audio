@@ -10,6 +10,7 @@ import time
 import threading
 import os
 
+
 # heavily based on https://www.thepythoncode.com/article/make-a-gui-voice-recorder-python
 
 
@@ -37,32 +38,147 @@ def launch_voice_recorder():
         """
         Function that records and generates wav file
         """
-        try:
-            freq = 44100
 
-            
-            duration = int(duration_entry.get())
-
-            # make click track
-            # click_track_duration = 8
-            amp = 2
-            metronome_tempo = int(metronome_entry.get())
-            interval_between_beats = 60 / metronome_tempo
-            # num_beats = int(click_track_duration / interval_between_beats) + 1
+        def generate_click_track(amp, tempo, starting_tone, frequency):
+            """
+            Given the level of amplification, the mentronome tempo, and the starting tone
+            Generate the click track with the metronome overlaid
+            :param amp: int, the amplification factor on the click trackk (sometimes tone is too loud)
+            :param tempo: the metronome tempo in beats per minute
+            :param starting_tone: the starting tone (ex: A4)
+            :param frequency: the frequency to generate click track and tone at
+            :return: np array representing the combination of the click track and starting tone;
+            also returns duration of the click track
+            """
+            interval_between_beats = 60 / tempo
             num_beats = 8
             click_track_duration = int(interval_between_beats * num_beats)
             click_times = [i * interval_between_beats for i in range(num_beats)]
-            click_track = librosa.clicks(times=click_times, sr=freq)
+            click_track = librosa.clicks(times=click_times, sr=frequency)
             click_track = click_track * amp
 
             # make starting tone
-            tone = tone_entry.get()
-            note_freq = librosa.note_to_hz(tone)
-            starting_tone = librosa.tone(note_freq, sr=freq, length=len(click_track))
+            note_freq = librosa.note_to_hz(starting_tone)
+            starting_tone = librosa.tone(note_freq, sr=frequency, length=len(click_track))
 
             # combine click track and starting tone
-            stacked = click_track + starting_tone
-            sd.play(stacked, freq)
+            combined_sound = click_track + starting_tone
+
+            return combined_sound, click_track_duration
+
+        def get_scale_notes(key, starting_note):
+            """
+            Given the user inputted key and starting note
+            Return numpy array representing the scale including the starting note
+            :param key: string, major or minor key that user intends to sing in
+            :param starting_note: string, tone of the starting note
+            :return: list of strings representing notes in scale
+            """
+            minor_keys = {'A': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+                          'A#': ['A#', 'B#', 'C#', 'D#', 'E#', 'F#', 'G#'],
+                          'Ab': ['Ab', 'Bb', 'Cb', 'Db', 'Eb', 'Fb', 'Gb'],
+                          'B': ['B', 'C#', 'D', 'E', 'F#', 'G', 'A'],
+                          'B#': ['B#', 'C##', 'D#', 'E#', 'F##', 'G#', 'A#'],
+                          'Bb': ['Bb', 'C', 'Db', 'Eb', 'F', 'Gb', 'Ab'],
+                          'C': ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'Bb'],
+                          'C#': ['C#', 'D#', 'E', 'F#', 'G#', 'A', 'B'],
+                          'C##': ['C##', 'D##', 'E#', 'F##', 'G##', 'A#', 'B#'],
+                          'D': ['D', 'E', 'F', 'G', 'A', 'Bb', 'C'],
+                          'D#': ['D#', 'E#', 'F#', 'G#', 'A#', 'B', 'C#'],
+                          'Db': ['Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bbb', 'Cb'],
+                          'E': ['E', 'F#', 'G', 'A', 'B', 'C', 'D'],
+                          'E#': ['E#', 'F##', 'G#', 'A#', 'B#', 'C#', 'D#'],
+                          'Eb': ['Eb', 'F', 'Gb', 'Ab', 'Bb', 'Cb', 'Db'],
+                          'F': ['F', 'G', 'Ab', 'Bb', 'C', 'Db', 'Eb'],
+                          'F#': ['F#', 'G#', 'A', 'B', 'C#', 'D', 'E'],
+                          'F##': ['F##', 'G##', 'A#', 'B#', 'C##', 'D#', 'E#'],
+                          'G': ['G', 'A', 'Bb', 'C', 'D', 'Eb', 'F'],
+                          'G#': ['G#', 'A#', 'B', 'C#', 'D#', 'E', 'F#'],
+                          'G##': ['G##', 'A##', 'B#', 'C##', 'D##', 'E#', 'F##']}
+            major_keys = {'A': ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'],
+                          'A#': ['A#', 'B#', 'C##', 'D#', 'E#', 'F##', 'G##'],
+                          'Ab': ['Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G'],
+                          'B': ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#'],
+                          'B#': ['B#', 'C##', 'D##', 'E#', 'F##', 'G##', 'A##'],
+                          'Bb': ['Bb', 'C', 'D', 'Eb', 'F', 'G', 'A'],
+                          'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+                          'C#': ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'],
+                          'Cb': ['Cb', 'Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb'],
+                          'D': ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'],
+                          'D#': ['D#', 'E#', 'F##', 'G#', 'A#', 'B#', 'C##'],
+                          'Db': ['Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C'],
+                          'E': ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'],
+                          'E#': ['E#', 'F##', 'G##', 'A#', 'B#', 'C##', 'D##'],
+                          'Eb': ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D'],
+                          'F': ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'],
+                          'F#': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
+                          'Fb': ['Fb', 'Gb', 'Ab', 'Bbb', 'Cb', 'Db', 'Eb'],
+                          'G': ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
+                          'G#': ['G#', 'A#', 'B#', 'C#', 'D#', 'E#', 'F##'],
+                          'Gb': ['Gb', 'Ab', 'Bb', 'Cb', 'Db', 'Eb', 'F']}
+            distance_from_c = {'A': 6, 'B': 7, 'C': 1, 'D': 2, 'E': 3, 'F': 4, 'G': 5}
+
+            # get the appropriate scale
+            minor = key.islower()
+            scale = major_keys[key] if not minor else minor_keys[key[0].upper() + key[1:]]
+            scale = scale + [key[0].upper() + key[1:]]
+
+            # figure out what octave to play
+            start_tone, octave = starting_note[:-1], int(starting_note[-1])
+
+            tonic_dist_from_c = distance_from_c[key[0].upper()]
+            start_tone_dist_from_c = distance_from_c[start_tone[0].upper()]
+
+            new_scale = []
+            start_octave = octave if tonic_dist_from_c <= start_tone_dist_from_c else octave - 1
+
+            found_C = False
+            for note in scale:
+                if note[0] != 'C' and not found_C:
+                    new_scale.append(note + str(start_octave))
+                else:
+                    found_C = True
+                    new_scale.append(note + str(start_octave + 1))
+
+            return new_scale
+
+        def generate_scale_tones(notes, frequency, bpm):
+            """
+            Given the notes, the sampling frequency, and the tempo
+            Generate an array representing the audio of the notes in the scale
+            :param notes: strings (ex: A4) representing notes in scale
+            :param frequency: sampling frequency
+            :param bpm: tempo in beats per minute
+            :return: array
+            """
+            interval_between_beats = 60 / bpm
+            scale_sound = np.array([])
+
+            for note in notes:
+                note_freq = librosa.note_to_hz(note)
+                tone_audio = librosa.tone(note_freq, sr=frequency, duration=interval_between_beats)
+                scale_sound = np.concatenate((scale_sound, tone_audio), axis = None)
+
+            return scale_sound
+
+        #####################################################################################
+
+        try:
+            freq = 44100
+
+            duration = int(duration_entry.get())
+            key = key_entry.get()
+            metronome_tempo = int(metronome_entry.get())
+            tone = tone_entry.get()
+            amp = 2
+
+            stacked, click_track_duration = generate_click_track(amp, metronome_tempo, tone, freq)
+            notes_scale = get_scale_notes(key, tone)
+            scale_audio = generate_scale_tones(notes_scale, freq, metronome_tempo)
+
+            final_audio = np.concatenate((scale_audio, stacked))
+
+            sd.play(final_audio, freq)
 
             # Indicate how many seconds left before recording starts
             time_left_before_start = click_track_duration
@@ -92,7 +208,7 @@ def launch_voice_recorder():
                                              'value')
 
     ####### CREATE WIDGET #######
-    POPUP_HEIGHT = 600
+    POPUP_HEIGHT = 700
     POPUP_WIDTH = 400
     LOGO_WIDTH = 250
     LOGO_HEIGHT = 85
@@ -137,12 +253,35 @@ def launch_voice_recorder():
     canvas.create_window(POPUP_WIDTH // 2, 400, window=tone_label)
     canvas.create_window(POPUP_WIDTH // 2, 425, window=tone_entry)
 
+    # Create a checkbox for entering scale / key
+    choices = ['C', 'D', 'E', 'F', 'G', 'A', 'B',
+               'c', 'd', 'e', 'f', 'g', 'a', 'b']
+    key_entry = StringVar(window, "C")  # Create a variable for strings, and initialize the variable
+    buttons = []
+    for choice in choices:
+        button = ttk.Radiobutton(window, text=choice, variable=key_entry, value=choice)
+        buttons.append(button)
+
+    key_label = ttk.Label(window, text='Select a key signature')
+    canvas.create_window(POPUP_WIDTH // 2, 500, window=key_label)
+
+    num_key_letters = len(choices) // 2  # number of key letters
+    starting_loc = POPUP_WIDTH // 2 - (num_key_letters // 2) * 40
+    for i in range(len(buttons)):
+        if i // num_key_letters == 0:
+            # first row items
+            canvas.create_window(starting_loc + i * 40, 525, window=buttons[i])
+        elif i // num_key_letters == 1:
+            # second row items
+            canvas.create_window(starting_loc + (i % num_key_letters) * 40, 550, window=buttons[i])
+
     # Create progress bar and recording button
     progress_label = ttk.Label(window, text="Press Record to Start!")
     record_button = ttk.Button(window, text='Record', style='TButton', command=recording_thread)
-    canvas.create_window(POPUP_WIDTH // 2, 500, window=progress_label)
-    canvas.create_window(POPUP_WIDTH // 2, 550, window=record_button)
+    canvas.create_window(POPUP_WIDTH // 2, 600, window=progress_label)
+    canvas.create_window(POPUP_WIDTH // 2, 650, window=record_button)
 
     window.mainloop()
+
 
 launch_voice_recorder()
