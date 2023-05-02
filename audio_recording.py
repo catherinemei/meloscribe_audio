@@ -39,7 +39,7 @@ def launch_voice_recorder():
         Function that records and generates wav file
         """
 
-        def generate_click_track(amp, tempo, starting_tone, frequency):
+        def generate_click_tone_track(amp, tempo, starting_tone, frequency):
             """
             Given the level of amplification, the mentronome tempo, and the starting tone
             Generate the click track with the metronome overlaid
@@ -65,6 +65,23 @@ def launch_voice_recorder():
             combined_sound = click_track + starting_tone
 
             return combined_sound, click_track_duration
+
+        def generate_click_track(amplifier, tempo, frequency, seconds):
+            """
+            Similar to previous helper function, except only generates click track with no tones
+            :param seconds: duration of the click track in seconds
+            :param amplifier: int, the amplification factor on the click trackk (sometimes tone is too loud)
+            :param tempo: the metronome tempo in beats per minute
+            :param frequency: the frequency to generate click track and tone at
+            :return: numpy array representing the audio of the click track
+            """
+            interval_between_beats = 60 / tempo
+            num_beats = int(seconds / interval_between_beats)
+            click_times = [i * interval_between_beats for i in range(num_beats)]
+            click_track = librosa.clicks(times=click_times, sr=frequency)
+            click_track = click_track * amplifier
+
+            return click_track
 
         def get_scale_notes(key, starting_note):
             """
@@ -121,7 +138,7 @@ def launch_voice_recorder():
             # get the appropriate scale
             minor = key.islower()
             scale = major_keys[key] if not minor else minor_keys[key[0].upper() + key[1:]]
-            scale = scale + [key[0].upper() + key[1:]]
+            scale = scale + [key[0].upper() + key[1:]] # add tonic
 
             # figure out what octave to play
             start_tone, octave = starting_note[:-1], int(starting_note[-1])
@@ -130,15 +147,13 @@ def launch_voice_recorder():
             start_tone_dist_from_c = distance_from_c[start_tone[0].upper()]
 
             new_scale = []
+
             start_octave = octave if tonic_dist_from_c <= start_tone_dist_from_c else octave - 1
 
-            found_C = False
-            for note in scale:
-                if note[0] != 'C' and not found_C:
-                    new_scale.append(note + str(start_octave))
-                else:
-                    found_C = True
-                    new_scale.append(note + str(start_octave + 1))
+            for i in range(len(scale)):
+                if scale[i][0] == 'C' and i != 0:
+                    start_octave += 1
+                new_scale.append(scale[i] + str(start_octave))
 
             return new_scale
 
@@ -157,9 +172,9 @@ def launch_voice_recorder():
             for note in notes:
                 note_freq = librosa.note_to_hz(note)
                 tone_audio = librosa.tone(note_freq, sr=frequency, duration=interval_between_beats)
-                scale_sound = np.concatenate((scale_sound, tone_audio), axis = None)
+                scale_sound = np.concatenate((scale_sound, tone_audio), axis=None)
 
-            return scale_sound
+            return scale_sound, interval_between_beats * len(notes)
 
         #####################################################################################
 
@@ -172,16 +187,16 @@ def launch_voice_recorder():
             tone = tone_entry.get()
             amp = 2
 
-            stacked, click_track_duration = generate_click_track(amp, metronome_tempo, tone, freq)
+            stacked, click_track_duration = generate_click_tone_track(amp, metronome_tempo, tone, freq)
             notes_scale = get_scale_notes(key, tone)
-            scale_audio = generate_scale_tones(notes_scale, freq, metronome_tempo)
+            scale_audio, scale_duration = generate_scale_tones(notes_scale, freq, metronome_tempo)
 
             final_audio = np.concatenate((scale_audio, stacked))
-
+            metronome_while_recording = generate_click_track(2, metronome_tempo, freq, duration)
             sd.play(final_audio, freq)
 
             # Indicate how many seconds left before recording starts
-            time_left_before_start = click_track_duration
+            time_left_before_start = int(click_track_duration + scale_duration)
             while time_left_before_start > 0:
                 window.update()
                 time.sleep(1)
@@ -189,7 +204,7 @@ def launch_voice_recorder():
                 progress_label.config(text="Start Recording in: " + str(time_left_before_start))
 
             sd.wait()
-            recording = sd.rec(duration * freq, samplerate=freq, channels=1)
+            recording = sd.playrec(metronome_while_recording, samplerate=freq, channels=1)
             counter = 0
             while counter < duration:
                 window.update()
