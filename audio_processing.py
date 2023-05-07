@@ -5,7 +5,9 @@ import pandas as pd
 import wavio
 from audio_recording import launch_voice_recorder
 from audio_recording import get_scale_notes
+import os
 
+path = os.path.dirname(os.path.realpath(__file__))
 
 def plot_beats(sound_y, beats):
     """
@@ -65,7 +67,7 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
     generate a CSV with the start and end timestamps of a note as well as the note frequency and letter
     :param note_onsets: estimated beat event locations in time (seconds)
     :param f0s_freq: fundamental frequencies
-    :param f0_time: times that the fundamental frequences occur
+    :param f0_time: times that the fundamental frequencies occur
     :param file_name: file name of output json for notes
     :return: pandas Dataframe and raw note_info list
     """
@@ -82,6 +84,8 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
     note_info = []
     freq_pt = 0
     json_obj_str = "var notes = ["
+    last_taken_time = 0
+    gap = 1 # how much gap to wait to indicate a rest
 
     for t in range(len(note_onsets) - 1):
         window_start = note_onsets[t]
@@ -103,15 +107,31 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
             window_times.append(f0_time[freq_pt])
             freq_pt += 1
 
-        # window is too short, doesn't contain any notes
-        if len(window_freqs) < 2:
+        if last_taken_time <= gap and len(window_freqs < 2):
             continue
 
-        note, note_freq, note_midi = match_correct_note(window_freqs, scale)
-        note_info.append((window_times[0], window_times[-1], note_freq, note, note_midi, window_freqs))
-        note_obj = "{ start_sec: " + str(window_times[0]) + ", end_sec: " + str(
-            window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
-            note_midi) + ", note_name: '" + note + "' }, "
+        # if window is too short, doesn't contain any notes, return 0 (to indicate a rest)
+        if len(window_freqs) < 2 and window_end - last_taken_time > gap:
+            note_freq = 0
+            note = 0
+            note_midi = 0
+            average_freq = 0
+            note_info.append((last_taken_time, window_end, note_freq, note, note_midi, window_freqs))
+            note_obj = "{ start_sec: " + str(last_taken_time) + ", end_sec: " + str(
+                window_end) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
+                note_midi) + ", note_name: '" + note + "' }, "
+            last_taken_time = window_end
+            # continue
+        else:
+            average_freq = np.average(window_freqs)
+            note = librosa.hz_to_note(average_freq)
+            note_freq = librosa.note_to_hz(note)
+            note_midi = librosa.note_to_midi(note)
+            note_info.append((window_times[0], window_times[-1], note_freq, note, note_midi, window_freqs))
+            note_obj = "{ start_sec: " + str(window_times[0]) + ", end_sec: " + str(
+                window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
+                note_midi) + ", note_name: '" + note + "' }, "
+            last_taken_time = window_times[-1]
         json_obj_str += note_obj
 
     # take care of last note
@@ -223,13 +243,13 @@ launch_voice_recorder()
 # y, sr = librosa.load("audio_files/birthday.wav")
 # y, sr = librosa.load("audio_files/twinkle.wav")
 
-y, sr = librosa.load("audio_files/recording.wav")
+y, sr = librosa.load(path + "/audio_files/recording.wav")
 
 # Identify fundamental frequency
 f0, voiced_flag, voiced_probs = librosa.pyin(y, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'), sr=sr)
 times = librosa.times_like(f0)
 f0s, f0_times = process_fundamental_freqs(f0, times)
-# plot_fundamental_freqs(y, f0)
+plot_fundamental_freqs(y, f0)
 
 # Rhythm detection - onset.onset_detect
 onsets = librosa.onset.onset_detect(y=y, sr=sr, units='time')
@@ -240,8 +260,9 @@ tempo, beats = librosa.beat.beat_track(y=y, sr=sr, units='time')
 # plot_beats(y, beats)
 
 # librosa.beat.beat_track misses last onset, get that information from onsets and combine the two
-final_beats = combine_onset_times(onsets, beats)
-# plot_beats(y, final_beats)
+# final_beats = combine_onset_times(onsets, beats)
+final_beats = onsets
+plot_beats(y, final_beats)
 
 notes_df, notes_info = segment_notes(final_beats, f0s, f0_times, 'recording.js')
 

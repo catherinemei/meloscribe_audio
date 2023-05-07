@@ -270,7 +270,7 @@ def launch_voice_recorder():
     canvas.create_image(POPUP_WIDTH // 2, 100, image=logo)
 
     # Create box to enter recording duration
-    duration_label = ttk.Label(window, text='Duration (in sec)')
+    duration_label = ttk.Label(window, text='Number of Measures (4 Beats Per Measure)')
     duration_entry = ttk.Entry(window, width=14, style='TEntry')
     canvas.create_window(POPUP_WIDTH // 2, 200, window=duration_label)
     canvas.create_window(POPUP_WIDTH // 2, 225, window=duration_entry)
