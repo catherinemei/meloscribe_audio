@@ -83,13 +83,13 @@ def launch_voice_recorder():
 
             return click_track
 
-        def get_scale_notes(key, starting_note):
+        def get_scale_notes(key):
             """
-            Given the user inputted key and starting note
-            Return numpy array representing the scale including the starting note
-            :param key: string, major or minor key that user intends to sing in
-            :param starting_note: string, tone of the starting note
-            :return: list of strings representing notes in scale
+            Given the letter denoting the major or minor key
+            Return the notes in the scale for that major or minor key
+
+            :param key: string representing the key
+            :return: list of notes within the key
             """
             minor_keys = {'A': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
                           'A#': ['A#', 'B#', 'C#', 'D#', 'E#', 'F#', 'G#'],
@@ -133,12 +133,25 @@ def launch_voice_recorder():
                           'G': ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
                           'G#': ['G#', 'A#', 'B#', 'C#', 'D#', 'E#', 'F##'],
                           'Gb': ['Gb', 'Ab', 'Bb', 'Cb', 'Db', 'Eb', 'F']}
-            distance_from_c = {'A': 6, 'B': 7, 'C': 1, 'D': 2, 'E': 3, 'F': 4, 'G': 5}
 
             # get the appropriate scale
             minor = key.islower()
             scale = major_keys[key] if not minor else minor_keys[key[0].upper() + key[1:]]
-            scale = scale + [key[0].upper() + key[1:]] # add tonic
+            scale = scale + [key[0].upper() + key[1:]]  # add tonic
+
+            return scale
+
+
+        def get_scale_notes_with_octave(key, starting_note):
+            """
+            Given the user inputted key and starting note
+            Return numpy array representing the scale including the starting note (at correct octave)
+            :param key: string, major or minor key that user intends to sing in
+            :param starting_note: string, tone of the starting note
+            :return: list of strings representing notes in scale
+            """
+            distance_from_c = {'A': 6, 'B': 7, 'C': 1, 'D': 2, 'E': 3, 'F': 4, 'G': 5}
+            scale = get_scale_notes(key)
 
             # figure out what octave to play
             start_tone, octave = starting_note[:-1], int(starting_note[-1])
@@ -188,8 +201,13 @@ def launch_voice_recorder():
             amp = 2
 
             stacked, click_track_duration = generate_click_tone_track(amp, metronome_tempo, tone, freq)
-            notes_scale = get_scale_notes(key, tone)
+            notes_scale = get_scale_notes_with_octave(key, tone)
             scale_audio, scale_duration = generate_scale_tones(notes_scale, freq, metronome_tempo)
+
+            # write key to text file
+            with open('audio_files/recording_key.txt', 'w') as f:
+                f.write(key)
+                f.close()
 
             final_audio = np.concatenate((scale_audio, stacked))
             metronome_while_recording = generate_click_track(2, metronome_tempo, freq, duration)
