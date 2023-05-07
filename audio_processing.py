@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import wavio
 from audio_recording import launch_voice_recorder
+from audio_recording import get_scale_notes
 
 
 def plot_beats(sound_y, beats):
@@ -69,6 +70,14 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
     :return: pandas Dataframe and raw note_info list
     """
 
+    # load notes in key + find notes in key
+    with open('audio_files/recording_key.txt', 'r') as f:
+        line_input = f.read()
+        lines = line_input.split("\n")
+
+    key = lines[0]
+    scale = get_scale_notes(key)
+
     # (timestamp start, timestamp end, note frequency, note letter, frequencies included)
     note_info = []
     freq_pt = 0
@@ -98,10 +107,7 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
         if len(window_freqs) < 2:
             continue
 
-        average_freq = np.average(window_freqs)
-        note = librosa.hz_to_note(average_freq)
-        note_freq = librosa.note_to_hz(note)
-        note_midi = librosa.note_to_midi(note)
+        note, note_freq, note_midi = match_correct_note(window_freqs, scale)
         note_info.append((window_times[0], window_times[-1], note_freq, note, note_midi, window_freqs))
         note_obj = "{ start_sec: " + str(window_times[0]) + ", end_sec: " + str(
             window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
@@ -114,10 +120,7 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
         window_times = f0_time[freq_pt:]
 
         if len(window_freqs) >= 2:
-            average_freq = np.average(window_freqs)
-            note = librosa.hz_to_note(average_freq)
-            note_freq = librosa.note_to_hz(note)
-            note_midi = librosa.note_to_midi(note)
+            note, note_freq, note_midi = match_correct_note(window_freqs, scale)
             note_info.append((window_times[0], window_times[-1], note_freq, note, note_midi, window_freqs))
             note_obj = "{ start_sec: " + str(window_times[0]) + ", end_sec: " + str(
                 window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
@@ -135,6 +138,38 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
                                                 'included_freqs'])
 
     return df_notes, note_info
+
+
+def match_correct_note(window_freqs, notes_in_key):
+    """
+    Given the frequencies in the window current window and the notes in the current key
+    Return the in-key note that is closest in frequency value to the average frequency of the window
+    :param window_freqs: list of frequency values
+    :param notes_in_key: list of notes in the key
+    :return: string representing the note within the window (note name + octave)
+    the frequency of the note, and the midi number for the note
+    """
+    average_freq = np.average(window_freqs)
+
+    closest_note_name = ""
+    closest_note_freq = 0
+    min_freq_diff = float("inf")
+
+    # check notes from C1 to C7
+    # loop through all the options and find note in key that is closest to current
+    for note in notes_in_key:
+        for octave in range(1, 8):
+            note_with_octave = note + str(octave)
+            note_with_octave_freq = librosa.note_to_hz(note_with_octave)
+
+            if abs(note_with_octave_freq - average_freq) < min_freq_diff:
+                min_freq_diff = abs(note_with_octave_freq - average_freq)
+                closest_note_freq = note_with_octave_freq
+                closest_note_name = note_with_octave
+
+    note_midi = librosa.note_to_midi(closest_note_name)
+
+    return closest_note_name, closest_note_freq, note_midi
 
 
 def combine_onset_times(onset_detect, beat_track):

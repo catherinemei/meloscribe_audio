@@ -13,6 +13,113 @@ import os
 
 # heavily based on https://www.thepythoncode.com/article/make-a-gui-voice-recorder-python
 
+def get_scale_notes(key_str):
+    """
+    Given the letter denoting the major or minor key
+    Return the notes in the scale for that major or minor key
+
+    :param key_str: string representing the key
+    :return: list of notes within the key
+    """
+    minor_keys = {'A': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+                  'A#': ['A#', 'B#', 'C#', 'D#', 'E#', 'F#', 'G#'],
+                  'Ab': ['Ab', 'Bb', 'Cb', 'Db', 'Eb', 'Fb', 'Gb'],
+                  'B': ['B', 'C#', 'D', 'E', 'F#', 'G', 'A'],
+                  'B#': ['B#', 'C##', 'D#', 'E#', 'F##', 'G#', 'A#'],
+                  'Bb': ['Bb', 'C', 'Db', 'Eb', 'F', 'Gb', 'Ab'],
+                  'C': ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'Bb'],
+                  'C#': ['C#', 'D#', 'E', 'F#', 'G#', 'A', 'B'],
+                  'C##': ['C##', 'D##', 'E#', 'F##', 'G##', 'A#', 'B#'],
+                  'D': ['D', 'E', 'F', 'G', 'A', 'Bb', 'C'],
+                  'D#': ['D#', 'E#', 'F#', 'G#', 'A#', 'B', 'C#'],
+                  'Db': ['Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bbb', 'Cb'],
+                  'E': ['E', 'F#', 'G', 'A', 'B', 'C', 'D'],
+                  'E#': ['E#', 'F##', 'G#', 'A#', 'B#', 'C#', 'D#'],
+                  'Eb': ['Eb', 'F', 'Gb', 'Ab', 'Bb', 'Cb', 'Db'],
+                  'F': ['F', 'G', 'Ab', 'Bb', 'C', 'Db', 'Eb'],
+                  'F#': ['F#', 'G#', 'A', 'B', 'C#', 'D', 'E'],
+                  'F##': ['F##', 'G##', 'A#', 'B#', 'C##', 'D#', 'E#'],
+                  'G': ['G', 'A', 'Bb', 'C', 'D', 'Eb', 'F'],
+                  'G#': ['G#', 'A#', 'B', 'C#', 'D#', 'E', 'F#'],
+                  'G##': ['G##', 'A##', 'B#', 'C##', 'D##', 'E#', 'F##']}
+    major_keys = {'A': ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'],
+                  'A#': ['A#', 'B#', 'C##', 'D#', 'E#', 'F##', 'G##'],
+                  'Ab': ['Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G'],
+                  'B': ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#'],
+                  'B#': ['B#', 'C##', 'D##', 'E#', 'F##', 'G##', 'A##'],
+                  'Bb': ['Bb', 'C', 'D', 'Eb', 'F', 'G', 'A'],
+                  'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+                  'C#': ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'],
+                  'Cb': ['Cb', 'Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb'],
+                  'D': ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'],
+                  'D#': ['D#', 'E#', 'F##', 'G#', 'A#', 'B#', 'C##'],
+                  'Db': ['Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C'],
+                  'E': ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'],
+                  'E#': ['E#', 'F##', 'G##', 'A#', 'B#', 'C##', 'D##'],
+                  'Eb': ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D'],
+                  'F': ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'],
+                  'F#': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
+                  'Fb': ['Fb', 'Gb', 'Ab', 'Bbb', 'Cb', 'Db', 'Eb'],
+                  'G': ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
+                  'G#': ['G#', 'A#', 'B#', 'C#', 'D#', 'E#', 'F##'],
+                  'Gb': ['Gb', 'Ab', 'Bb', 'Cb', 'Db', 'Eb', 'F']}
+
+    # get the appropriate scale
+    minor = key_str.islower()
+    scale = major_keys[key_str] if not minor else minor_keys[key_str[0].upper() + key_str[1:]]
+    scale = scale + [key_str[0].upper() + key_str[1:]]  # add tonic
+
+    return scale
+
+
+def get_scale_notes_with_octave(key_str, starting_note):
+    """
+    Given the user inputted key and starting note
+    Return numpy array representing the scale including the starting note (at correct octave)
+    :param key_str: string, major or minor key that user intends to sing in
+    :param starting_note: string, tone of the starting note
+    :return: list of strings representing notes in scale
+    """
+    distance_from_c = {'A': 6, 'B': 7, 'C': 1, 'D': 2, 'E': 3, 'F': 4, 'G': 5}
+    scale = get_scale_notes(key_str)
+
+    # figure out what octave to play
+    start_tone, octave = starting_note[:-1], int(starting_note[-1])
+
+    tonic_dist_from_c = distance_from_c[key_str[0].upper()]
+    start_tone_dist_from_c = distance_from_c[start_tone[0].upper()]
+
+    new_scale = []
+
+    start_octave = octave if tonic_dist_from_c <= start_tone_dist_from_c else octave - 1
+
+    for i in range(len(scale)):
+        if scale[i][0] == 'C' and i != 0:
+            start_octave += 1
+        new_scale.append(scale[i] + str(start_octave))
+
+    return new_scale
+
+
+def generate_scale_tones(notes, frequency, bpm):
+    """
+    Given the notes, the sampling frequency, and the tempo
+    Generate an array representing the audio of the notes in the scale
+    :param notes: strings (ex: A4) representing notes in scale
+    :param frequency: sampling frequency
+    :param bpm: tempo in beats per minute
+    :return: array
+    """
+    interval_between_beats = 60 / bpm
+    scale_sound = np.array([])
+
+    for note in notes:
+        note_freq = librosa.note_to_hz(note)
+        tone_audio = librosa.tone(note_freq, sr=frequency, duration=interval_between_beats)
+        scale_sound = np.concatenate((scale_sound, tone_audio), axis=None)
+
+    return scale_sound, interval_between_beats * len(notes)
+
 
 def launch_voice_recorder():
     """
@@ -82,112 +189,6 @@ def launch_voice_recorder():
             click_track = click_track * amplifier
 
             return click_track
-
-        def get_scale_notes(key):
-            """
-            Given the letter denoting the major or minor key
-            Return the notes in the scale for that major or minor key
-
-            :param key: string representing the key
-            :return: list of notes within the key
-            """
-            minor_keys = {'A': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-                          'A#': ['A#', 'B#', 'C#', 'D#', 'E#', 'F#', 'G#'],
-                          'Ab': ['Ab', 'Bb', 'Cb', 'Db', 'Eb', 'Fb', 'Gb'],
-                          'B': ['B', 'C#', 'D', 'E', 'F#', 'G', 'A'],
-                          'B#': ['B#', 'C##', 'D#', 'E#', 'F##', 'G#', 'A#'],
-                          'Bb': ['Bb', 'C', 'Db', 'Eb', 'F', 'Gb', 'Ab'],
-                          'C': ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'Bb'],
-                          'C#': ['C#', 'D#', 'E', 'F#', 'G#', 'A', 'B'],
-                          'C##': ['C##', 'D##', 'E#', 'F##', 'G##', 'A#', 'B#'],
-                          'D': ['D', 'E', 'F', 'G', 'A', 'Bb', 'C'],
-                          'D#': ['D#', 'E#', 'F#', 'G#', 'A#', 'B', 'C#'],
-                          'Db': ['Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bbb', 'Cb'],
-                          'E': ['E', 'F#', 'G', 'A', 'B', 'C', 'D'],
-                          'E#': ['E#', 'F##', 'G#', 'A#', 'B#', 'C#', 'D#'],
-                          'Eb': ['Eb', 'F', 'Gb', 'Ab', 'Bb', 'Cb', 'Db'],
-                          'F': ['F', 'G', 'Ab', 'Bb', 'C', 'Db', 'Eb'],
-                          'F#': ['F#', 'G#', 'A', 'B', 'C#', 'D', 'E'],
-                          'F##': ['F##', 'G##', 'A#', 'B#', 'C##', 'D#', 'E#'],
-                          'G': ['G', 'A', 'Bb', 'C', 'D', 'Eb', 'F'],
-                          'G#': ['G#', 'A#', 'B', 'C#', 'D#', 'E', 'F#'],
-                          'G##': ['G##', 'A##', 'B#', 'C##', 'D##', 'E#', 'F##']}
-            major_keys = {'A': ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'],
-                          'A#': ['A#', 'B#', 'C##', 'D#', 'E#', 'F##', 'G##'],
-                          'Ab': ['Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G'],
-                          'B': ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#'],
-                          'B#': ['B#', 'C##', 'D##', 'E#', 'F##', 'G##', 'A##'],
-                          'Bb': ['Bb', 'C', 'D', 'Eb', 'F', 'G', 'A'],
-                          'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-                          'C#': ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'],
-                          'Cb': ['Cb', 'Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb'],
-                          'D': ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'],
-                          'D#': ['D#', 'E#', 'F##', 'G#', 'A#', 'B#', 'C##'],
-                          'Db': ['Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C'],
-                          'E': ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'],
-                          'E#': ['E#', 'F##', 'G##', 'A#', 'B#', 'C##', 'D##'],
-                          'Eb': ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D'],
-                          'F': ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'],
-                          'F#': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
-                          'Fb': ['Fb', 'Gb', 'Ab', 'Bbb', 'Cb', 'Db', 'Eb'],
-                          'G': ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
-                          'G#': ['G#', 'A#', 'B#', 'C#', 'D#', 'E#', 'F##'],
-                          'Gb': ['Gb', 'Ab', 'Bb', 'Cb', 'Db', 'Eb', 'F']}
-
-            # get the appropriate scale
-            minor = key.islower()
-            scale = major_keys[key] if not minor else minor_keys[key[0].upper() + key[1:]]
-            scale = scale + [key[0].upper() + key[1:]]  # add tonic
-
-            return scale
-
-
-        def get_scale_notes_with_octave(key, starting_note):
-            """
-            Given the user inputted key and starting note
-            Return numpy array representing the scale including the starting note (at correct octave)
-            :param key: string, major or minor key that user intends to sing in
-            :param starting_note: string, tone of the starting note
-            :return: list of strings representing notes in scale
-            """
-            distance_from_c = {'A': 6, 'B': 7, 'C': 1, 'D': 2, 'E': 3, 'F': 4, 'G': 5}
-            scale = get_scale_notes(key)
-
-            # figure out what octave to play
-            start_tone, octave = starting_note[:-1], int(starting_note[-1])
-
-            tonic_dist_from_c = distance_from_c[key[0].upper()]
-            start_tone_dist_from_c = distance_from_c[start_tone[0].upper()]
-
-            new_scale = []
-
-            start_octave = octave if tonic_dist_from_c <= start_tone_dist_from_c else octave - 1
-
-            for i in range(len(scale)):
-                if scale[i][0] == 'C' and i != 0:
-                    start_octave += 1
-                new_scale.append(scale[i] + str(start_octave))
-
-            return new_scale
-
-        def generate_scale_tones(notes, frequency, bpm):
-            """
-            Given the notes, the sampling frequency, and the tempo
-            Generate an array representing the audio of the notes in the scale
-            :param notes: strings (ex: A4) representing notes in scale
-            :param frequency: sampling frequency
-            :param bpm: tempo in beats per minute
-            :return: array
-            """
-            interval_between_beats = 60 / bpm
-            scale_sound = np.array([])
-
-            for note in notes:
-                note_freq = librosa.note_to_hz(note)
-                tone_audio = librosa.tone(note_freq, sr=frequency, duration=interval_between_beats)
-                scale_sound = np.concatenate((scale_sound, tone_audio), axis=None)
-
-            return scale_sound, interval_between_beats * len(notes)
 
         #####################################################################################
 
@@ -317,4 +318,4 @@ def launch_voice_recorder():
     window.mainloop()
 
 
-launch_voice_recorder()
+# launch_voice_recorder()
