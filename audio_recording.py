@@ -10,6 +10,7 @@ import threading
 import os
 from idlelib.tooltip import Hovertip
 import customtkinter
+from tooltip import Hovertip
 
 # heavily based on https://www.thepythoncode.com/article/make-a-gui-voice-recorder-python
 
@@ -265,21 +266,21 @@ def launch_voice_recorder():
     # Create box to enter recording duration
     duration_label = customtkinter.CTkLabel(window, text='Number of Measures', font=("Helvetica", 24))
     duration_entry = customtkinter.CTkEntry(window, width=60)
-    duration_tooltip = Hovertip(duration_entry,'Enter the number of 4-beat measures you wish to record', hover_delay=0)
+    Hovertip(duration_entry,'Enter the number of 4-beat \nmeasures you wish to record', hover_delay=0)
     duration_label.place(relx=0.5, rely=0.25, anchor=CENTER)
     duration_entry.place(relx=0.5, rely=0.30, anchor=CENTER)
 
     # Create input for metronome
     metronome_label = customtkinter.CTkLabel(window, text='Metronome Tempo', font=("Helvetica", 24))
     metronome_entry = customtkinter.CTkEntry(window, width=60)
-    metronome_tooltip = Hovertip(metronome_entry, 'Enter the tempo you wish to record at in beats per minute', hover_delay=0)
+    Hovertip(metronome_entry, 'Enter the tempo you wish to \nrecord at in beats per minute', hover_delay=0)
     metronome_label.place(relx=0.5, rely=0.37, anchor=CENTER)
     metronome_entry.place(relx=0.5, rely=0.42, anchor=CENTER)
 
     # Create a box to enter note for starting tone
     tone_label = customtkinter.CTkLabel(window, text='Starting Note', font=("Helvetica", 24))
     tone_entry = customtkinter.CTkEntry(window, width=60)
-    tone_tooltip = Hovertip(tone_entry, 'Enter the starting note in the format:\n[Note Name][Octave] e.g. A4', hover_delay=0)
+    Hovertip(tone_entry, 'Enter the starting note in the format:\n[Note Name][Octave] e.g. A4', hover_delay=0)
     tone_label.place(relx=0.5, rely=0.50, anchor=CENTER)
     tone_entry.place(relx=0.5, rely=0.55, anchor=CENTER)
 
@@ -313,4 +314,4 @@ def launch_voice_recorder():
     window.mainloop()
 
 
-launch_voice_recorder()
+# launch_voice_recorder()
