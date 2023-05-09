@@ -3,8 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import wavio
-from audio_recording import launch_voice_recorder
-from audio_recording import get_scale_notes
+from audio_recording import launch_voice_recorder, get_scale_notes
 import os
 
 path = os.path.dirname(os.path.realpath(__file__))
@@ -85,7 +84,7 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
     freq_pt = 0
     json_obj_str = "var notes = ["
     last_taken_time = 0
-    gap = 1 # how much gap to wait to indicate a rest
+    gap = .5 # how much gap to wait to indicate a rest
 
     for t in range(len(note_onsets) - 1):
         window_start = note_onsets[t]
@@ -107,7 +106,7 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
             window_times.append(f0_time[freq_pt])
             freq_pt += 1
 
-        if last_taken_time <= gap and len(window_freqs < 2):
+        if last_taken_time <= gap and len(window_freqs) < 2:
             continue
 
         # if window is too short, doesn't contain any notes, return 0 (to indicate a rest)
@@ -122,17 +121,24 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
                 note_midi) + ", note_name: '" + note + "' }, "
             last_taken_time = window_end
             # continue
+        elif window_times[0] - last_taken_time > gap:
+            note_freq = 0
+            note = 0
+            note_midi = 0
+            note_info.append((last_taken_time, window_end, note_freq, note, note_midi, window_freqs))
+            note_obj = "{ start_sec: " + str(last_taken_time) + ", end_sec: " + str(
+                window_end) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
+                note_midi) + ", note_name: '" + note + "' }, "
+            last_taken_time = window_end
         else:
-            average_freq = np.average(window_freqs)
-            note = librosa.hz_to_note(average_freq)
-            note_freq = librosa.note_to_hz(note)
-            note_midi = librosa.note_to_midi(note)
+            note, note_freq, note_midi = match_correct_note(window_freqs, scale)
             note_info.append((window_times[0], window_times[-1], note_freq, note, note_midi, window_freqs))
             note_obj = "{ start_sec: " + str(window_times[0]) + ", end_sec: " + str(
-                window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
-                note_midi) + ", note_name: '" + note + "' }, "
+            window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
+            note_midi) + ", note_name: '" + note + "' }, "
             last_taken_time = window_times[-1]
         json_obj_str += note_obj
+
 
     # take care of last note
     if freq_pt < len(f0_time):
@@ -175,10 +181,10 @@ def match_correct_note(window_freqs, notes_in_key):
     closest_note_freq = 0
     min_freq_diff = float("inf")
 
-    # check notes from C1 to C7
+    # check notes from C2 to C6
     # loop through all the options and find note in key that is closest to current
     for note in notes_in_key:
-        for octave in range(1, 8):
+        for octave in range(2, 8):
             note_with_octave = note + str(octave)
             note_with_octave_freq = librosa.note_to_hz(note_with_octave)
 
