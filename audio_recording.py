@@ -3,13 +3,13 @@ import librosa
 import numpy as np
 from scipy.io.wavfile import write
 from tkinter import *
-from tkinter import ttk
 from tkinter.messagebox import showinfo, showerror, askokcancel
 from PIL import ImageTk, Image
 import time
 import threading
 import os
-
+from idlelib.tooltip import Hovertip
+import customtkinter
 
 # heavily based on https://www.thepythoncode.com/article/make-a-gui-voice-recorder-python
 
@@ -220,7 +220,7 @@ def launch_voice_recorder():
                 window.update()
                 time.sleep(1)
                 time_left_before_start -= 1
-                progress_label.config(text="Start Recording in: " + str(time_left_before_start))
+                progress_label.configure(text="Start Recording in: " + str(time_left_before_start))
 
             sd.wait()
             recording = sd.playrec(metronome_while_recording, samplerate=freq, channels=1)
@@ -229,7 +229,7 @@ def launch_voice_recorder():
                 window.update()
                 time.sleep(1)
                 counter += 1
-                progress_label.config(text="Recording Timer: " + str(counter))
+                progress_label.configure(text="Recording Timer: " + str(counter))
             sd.wait()
             file_name = 'audio_files/recording.wav'
             write(file_name, freq, recording)
@@ -243,49 +243,45 @@ def launch_voice_recorder():
 
     ####### CREATE WIDGET #######
     POPUP_HEIGHT = 700
-    POPUP_WIDTH = 400
-    LOGO_WIDTH = 250
-    LOGO_HEIGHT = 85
+    POPUP_WIDTH = 500
+    LOGO_WIDTH = 300
+    LOGO_HEIGHT = 300
 
-    window = Tk()
+    customtkinter.set_appearance_mode('light')
+    customtkinter.set_default_color_theme('blue')
+    window = customtkinter.CTk()
     window.protocol('WM_DELETE_WINDOW', close_window)
     window.title('Voice Recorder')
     window.geometry(f'{POPUP_WIDTH}x{POPUP_HEIGHT}+440+180')
     window.resizable(height=TRUE, width=TRUE)
 
-    # Add styling for all elements
-    label_style = ttk.Style()
-    label_style.configure('TLabel', foreground='#000000', font=('OCR A Extended', 18))
-    entry_style = ttk.Style()
-    entry_style.configure('TEntry', font=('Dotum', 15))
-    button_style = ttk.Style()
-    button_style.configure('TButton', foreground='#000000', font='DotumChe')
-
     # Creating picture for recording widget
-    canvas = Canvas(window, width=POPUP_WIDTH, height=POPUP_HEIGHT)
-    canvas.pack()
     logo = Image.open(os.path.dirname(os.path.realpath(__file__)) + "/record.png")
     logo = logo.resize((LOGO_WIDTH, LOGO_HEIGHT))  # width, height
-    logo = ImageTk.PhotoImage(logo)
-    canvas.create_image(POPUP_WIDTH // 2, 100, image=logo)
+    record_img = customtkinter.CTkImage(logo, size=(LOGO_WIDTH, LOGO_HEIGHT))
+    record_img_label = customtkinter.CTkLabel(window, text="", image=record_img)
+    record_img_label.place(relx=0.5, rely=0.1, anchor=CENTER)
 
     # Create box to enter recording duration
-    duration_label = ttk.Label(window, text='Number of Measures (4 Beats Per Measure)')
-    duration_entry = ttk.Entry(window, width=14, style='TEntry')
-    canvas.create_window(POPUP_WIDTH // 2, 200, window=duration_label)
-    canvas.create_window(POPUP_WIDTH // 2, 225, window=duration_entry)
+    duration_label = customtkinter.CTkLabel(window, text='Number of Measures', font=("Helvetica", 24))
+    duration_entry = customtkinter.CTkEntry(window, width=60)
+    duration_tooltip = Hovertip(duration_entry,'Enter the number of 4-beat measures you wish to record', hover_delay=0)
+    duration_label.place(relx=0.5, rely=0.25, anchor=CENTER)
+    duration_entry.place(relx=0.5, rely=0.30, anchor=CENTER)
 
     # Create input for metronome
-    metronome_label = ttk.Label(window, text='Metronome Tempo')
-    metronome_entry = ttk.Entry(window, width=14, style='TEntry')
-    canvas.create_window(POPUP_WIDTH // 2, 300, window=metronome_label)
-    canvas.create_window(POPUP_WIDTH // 2, 325, window=metronome_entry)
+    metronome_label = customtkinter.CTkLabel(window, text='Metronome Tempo', font=("Helvetica", 24))
+    metronome_entry = customtkinter.CTkEntry(window, width=60)
+    metronome_tooltip = Hovertip(metronome_entry, 'Enter the tempo you wish to record at in beats per minute', hover_delay=0)
+    metronome_label.place(relx=0.5, rely=0.37, anchor=CENTER)
+    metronome_entry.place(relx=0.5, rely=0.42, anchor=CENTER)
 
     # Create a box to enter note for starting tone
-    tone_label = ttk.Label(window, text='Starting Note')
-    tone_entry = ttk.Entry(window, width=14, style='TEntry')
-    canvas.create_window(POPUP_WIDTH // 2, 400, window=tone_label)
-    canvas.create_window(POPUP_WIDTH // 2, 425, window=tone_entry)
+    tone_label = customtkinter.CTkLabel(window, text='Starting Note', font=("Helvetica", 24))
+    tone_entry = customtkinter.CTkEntry(window, width=60)
+    tone_tooltip = Hovertip(tone_entry, 'Enter the starting note in the format:\n[Note Name][Octave] e.g. A4', hover_delay=0)
+    tone_label.place(relx=0.5, rely=0.50, anchor=CENTER)
+    tone_entry.place(relx=0.5, rely=0.55, anchor=CENTER)
 
     # Create a checkbox for entering scale / key
     choices = ['C', 'D', 'E', 'F', 'G', 'A', 'B',
@@ -293,29 +289,28 @@ def launch_voice_recorder():
     key_entry = StringVar(window, "C")  # Create a variable for strings, and initialize the variable
     buttons = []
     for choice in choices:
-        button = ttk.Radiobutton(window, text=choice, variable=key_entry, value=choice)
+        button = customtkinter.CTkRadioButton(window, text=choice, variable=key_entry, value=choice, font=("Helvetica", 16))
         buttons.append(button)
 
-    key_label = ttk.Label(window, text='Select a key signature')
-    canvas.create_window(POPUP_WIDTH // 2, 500, window=key_label)
+    key_label = customtkinter.CTkLabel(window, text='Select a key signature', font=("Helvetica", 24))
+    key_label.place(relx=0.5, rely=0.65, anchor=CENTER)
 
     num_key_letters = len(choices) // 2  # number of key letters
-    starting_loc = POPUP_WIDTH // 2 - (num_key_letters // 2) * 40
     for i in range(len(buttons)):
         if i // num_key_letters == 0:
             # first row items
-            canvas.create_window(starting_loc + i * 40, 525, window=buttons[i])
+            buttons[i].place(relx=0.25 + (0.6 / (num_key_letters - 1)) * i, rely=0.70, anchor=CENTER)
         elif i // num_key_letters == 1:
             # second row items
-            canvas.create_window(starting_loc + (i % num_key_letters) * 40, 550, window=buttons[i])
+            buttons[i].place(relx=0.25 + (0.6 / (num_key_letters - 1)) * (i % num_key_letters), rely=0.75, anchor=CENTER)
 
     # Create progress bar and recording button
-    progress_label = ttk.Label(window, text="Press Record to Start!")
-    record_button = ttk.Button(window, text='Record', style='TButton', command=recording_thread)
-    canvas.create_window(POPUP_WIDTH // 2, 600, window=progress_label)
-    canvas.create_window(POPUP_WIDTH // 2, 650, window=record_button)
+    progress_label = customtkinter.CTkLabel(window, text="Press Record to Start!", font=("Helvetica", 24))
+    record_button = customtkinter.CTkButton(window, text='Record', command=recording_thread)
+    progress_label.place(relx=0.5, rely=0.85, anchor=CENTER)
+    record_button.place(relx=0.5, rely=0.90, anchor=CENTER)
 
     window.mainloop()
 
 
-# launch_voice_recorder()
+launch_voice_recorder()
