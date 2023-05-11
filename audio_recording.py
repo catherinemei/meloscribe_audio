@@ -196,9 +196,11 @@ def launch_voice_recorder():
         try:
             freq = 44100
 
-            duration = int(duration_entry.get())
+            beats_per_measure = 4
             key = key_entry.get()
             metronome_tempo = int(metronome_entry.get())
+            duration = int(int(duration_entry.get()) * 60 * beats_per_measure / metronome_tempo) # convert measures to seconds
+            print(duration)
             tone = tone_entry.get()
             amp = 2
 
@@ -210,6 +212,13 @@ def launch_voice_recorder():
             with open('audio_files/recording_key.txt', 'w') as f:
                 f.write(key)
                 f.close()
+            
+            # write both key and metronome to text file
+            with open('audio_files/recording_info.txt', 'w') as f:
+                f.write(key)
+                f.write(metronome_tempo)
+                f.close()
+
 
             final_audio = np.concatenate((scale_audio, stacked))
             metronome_while_recording = generate_click_track(2, metronome_tempo, freq, duration)

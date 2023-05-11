@@ -7,14 +7,10 @@ import "js_files_notes/recording.js" as Notes
 MuseScore {
   menuPath: "Plugins.MeloScribe"
 
-  //  FileIO {
-  //     id: io
-  //     source: currentPath() +  "/data_files/twinkle.csv"
-  //     onError: console.log("FileIO Error")
-  //  }
   QProcess {
     id: proc
   }
+  
   FileIO {
     id: file
     source: '/Users/20gracehuang/Downloads/Documents/MIT\ Files/2023-spring-classes/6.8510/meloscribe_audio/notes_summary_csv/recording.csv'
@@ -85,9 +81,8 @@ MuseScore {
       {
             
             c.setDuration(pair.duration, 16);
+            console.log(pair.note);
             if(pair.note > 40)
-            // limit to higher octaves for now so that we don't get weird outliers, 
-            // change later once we have better handling
                   c.addNote(pair.note, false); // c.addNote(60, true) to insert note to chord
             else {
                   c.addRest();

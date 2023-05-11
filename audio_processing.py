@@ -72,11 +72,12 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
     """
 
     # load notes in key + find notes in key
-    with open('audio_files/recording_key.txt', 'r') as f:
+    with open('audio_files/recording_info.txt', 'r') as f:
         line_input = f.read()
         lines = line_input.split("\n")
 
     key = lines[0]
+    tempo = lines[1]
     scale = get_scale_notes(key)
 
     # (timestamp start, timestamp end, note frequency, note letter, frequencies included)
@@ -84,7 +85,8 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
     freq_pt = 0
     json_obj_str = "var notes = ["
     last_taken_time = 0
-    gap = .5 # how much gap to wait to indicate a rest
+    gap = 60 / (2 * tempo) # how much gap to wait to indicate at least an eighth rest, in seconds
+    started = False
 
     for t in range(len(note_onsets) - 1):
         window_start = note_onsets[t]
@@ -108,36 +110,35 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
 
         if last_taken_time <= gap and len(window_freqs) < 2:
             continue
+        if started:
+            # if window is too short, doesn't contain any notes, return 0 (to indicate a rest)
+            if len(window_freqs) < 2 and window_end - last_taken_time > gap:
+                note_freq = 0
+                note = 0
+                note_midi = 0
+                average_freq = 0
+                note_info.append((last_taken_time, window_end, note_freq, note, note_midi, window_freqs))
+                last_taken_time = window_end
+                # continue
+            elif len(window_times) == 0: # got no notes
+                note_info.append((last_taken_time, window_end, 0, 0, 0, []))
+            elif window_times[0] - last_taken_time > gap: 
+                # if the first new onset time is far away from the last note of the last window, take new time
+                note_freq = 0
+                note = 0
+                note_midi = 0
+                note_info.append((last_taken_time, window_times[0], note_freq, note, note_midi, window_freqs))
+                last_taken_time = window_times[0]
 
-        # if window is too short, doesn't contain any notes, return 0 (to indicate a rest)
-        if len(window_freqs) < 2 and window_end - last_taken_time > gap:
-            note_freq = 0
-            note = 0
-            note_midi = 0
-            average_freq = 0
-            note_info.append((last_taken_time, window_end, note_freq, note, note_midi, window_freqs))
-            note_obj = "{ start_sec: " + str(last_taken_time) + ", end_sec: " + str(
-                window_end) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
-                note_midi) + ", note_name: '" + note + "' }, "
-            last_taken_time = window_end
-            # continue
-        elif window_times[0] - last_taken_time > gap:
-            note_freq = 0
-            note = 0
-            note_midi = 0
-            note_info.append((last_taken_time, window_end, note_freq, note, note_midi, window_freqs))
-            note_obj = "{ start_sec: " + str(last_taken_time) + ", end_sec: " + str(
-                window_end) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
-                note_midi) + ", note_name: '" + note + "' }, "
-            last_taken_time = window_end
-        else:
+        if len(window_freqs) >= 2:
             note, note_freq, note_midi = match_correct_note(window_freqs, scale)
             note_info.append((window_times[0], window_times[-1], note_freq, note, note_midi, window_freqs))
             note_obj = "{ start_sec: " + str(window_times[0]) + ", end_sec: " + str(
             window_times[-1]) + ", note_freq_hz: " + str(note_freq) + ", note_midi: " + str(
             note_midi) + ", note_name: '" + note + "' }, "
             last_taken_time = window_times[-1]
-        json_obj_str += note_obj
+            json_obj_str += note_obj
+            started = True
 
 
     # take care of last note
@@ -254,8 +255,10 @@ y, sr = librosa.load(path + "/audio_files/recording.wav")
 # Identify fundamental frequency
 f0, voiced_flag, voiced_probs = librosa.pyin(y, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'), sr=sr)
 times = librosa.times_like(f0)
+if len(times) == 0:
+    print("No Recording Picked Up")
 f0s, f0_times = process_fundamental_freqs(f0, times)
-plot_fundamental_freqs(y, f0)
+# plot_fundamental_freqs(y, f0)
 
 # Rhythm detection - onset.onset_detect
 onsets = librosa.onset.onset_detect(y=y, sr=sr, units='time')
@@ -268,7 +271,7 @@ tempo, beats = librosa.beat.beat_track(y=y, sr=sr, units='time')
 # librosa.beat.beat_track misses last onset, get that information from onsets and combine the two
 # final_beats = combine_onset_times(onsets, beats)
 final_beats = onsets
-plot_beats(y, final_beats)
+# plot_beats(y, final_beats)
 
 notes_df, notes_info = segment_notes(final_beats, f0s, f0_times, 'recording.js')
 
