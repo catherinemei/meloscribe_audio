@@ -1,3 +1,36 @@
+# Project Directory Structure & File Explanation
+The structure of our project directory is as follows:
+
+```
+📦 
+├─ audio_files
+│  ├─ a440.wav
+│  ├─ birthday.wav
+│  ├─ click_track.wav
+│  ├─ recording.wav
+│  ├─ recording_info.txt
+│  ├─ starting_tone.wav
+│  ├─ trumpet.wav
+│  └─ twinkle.wav
+├─ audio_processing.py
+├─ audio_recording.py
+├─ insert_notes.qml
+├─ notes_summary_csv
+│  ├─ birthday.csv
+│  ├─ recording.csv
+│  └─ twinkle.csv
+├─ package.json
+├─ record.png
+├─ regenerated_wav
+│  ├─ birthday_regenerated.wav
+│  ├─ recording_regenerated.wav
+│  └─ twinkle_regenerated.wav
+├─ requirements.txt
+├─ run_script.sh
+├─ script.js
+└─ tooltip.py
+```
+
 # Installation & Setup Instructions
 
 ### 1. Clone the repository & install requirements
