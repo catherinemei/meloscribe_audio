@@ -30,9 +30,11 @@ The structure of our project directory is as follows:
 ├─ script.js
 └─ tooltip.py
 ```
-* `audio_files/recording_info.txt`:
+* **`audio_files/recording_info.txt`:**
 
-* WAV files in `audio_files` folder:
+* WAV files in `audio_files` folder: the WAV files in the `audio_files` folder are sample audio files that the 
+  `audio_processing.py` script can can process. In particular, the `recording.wav` file is the recorded audio from the user.
+  The other WAV files (e.g. `birthday.wav`) are example recordings that can be used to test the `audio_processing.py` script.
 
 * `audio_processing.py`:
 
@@ -86,7 +88,7 @@ When you are finished, close the recording interface, and the system will begin 
 ### 4. Run MuseScore Plugin & Paste Transcribed Output (GRACE)
 
 
-### FAQ: What if I don't have MuseScore installed on my computer?
+## FAQ: What if I don't have MuseScore installed on my computer?
 If MuseScore installation is not possible, our system can still be used to transcribe and playback recorded audio. After recording 
 audio from the user, the system processes the audio and writes the parsed results to `notes_summary_csv/recording.csv`.
 Additionally, the processed audio information from the CSV is regenerated into a playable WAV file. This WAV file is
