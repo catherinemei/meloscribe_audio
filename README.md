@@ -30,6 +30,31 @@ The structure of our project directory is as follows:
 ├─ script.js
 └─ tooltip.py
 ```
+* `audio_files/recording_info.txt`:
+
+* WAV files in `audio_files` folder:
+
+* `audio_processing.py`:
+
+* `audio_recording.py`:
+
+* `insert_notes.qml`:
+
+* CSV files in `notes_summary_csv` folder:
+
+* `record.png`:
+
+* WAV files in `regenerated_wav` folder:
+
+* `requirements.txt`:
+
+* `run_script.sh`:
+
+* `script.js`:
+
+* `tooltip.py`:
+
+
 
 # Installation & Setup Instructions
 
