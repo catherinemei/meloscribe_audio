@@ -30,31 +30,41 @@ The structure of our project directory is as follows:
 ├─ script.js
 └─ tooltip.py
 ```
-* **`audio_files/recording_info.txt`:**
+* **`audio_files/recording_info.txt`:** File containing the key and tempo of the user recording. Used in processing the
+recorded audio.
 
-* WAV files in `audio_files` folder: the WAV files in the `audio_files` folder are sample audio files that the 
+* **WAV files in `audio_files` folder:** the WAV files in the `audio_files` folder are sample audio files that the 
   `audio_processing.py` script can can process. In particular, the `recording.wav` file is the recorded audio from the user.
   The other WAV files (e.g. `birthday.wav`) are example recordings that can be used to test the `audio_processing.py` script.
 
-* `audio_processing.py`:
+* **`audio_processing.py`:** 
 
-* `audio_recording.py`:
+* **`audio_recording.py`:**
 
-* `insert_notes.qml`:
+* **`insert_notes.qml`:** GRACE
 
-* CSV files in `notes_summary_csv` folder:
+* **CSV files in `notes_summary_csv` folder:** The CSVs in this folder contain the results the `audio_processing.py` script.
+In particular, the CSVs contain information about the start and end times of a note (relative to the beginning of the recording, 
+  measured in seconds), the frequency of the detected note,
+  the note name (string), the corresponding MIDI number for the note, and the frequencies included in the
+  window from the start to end time frame (included for quality control). CSV files are named according to their corresponding
+  audio file (e.g. the CSV output for `recording.wav` is `recording.csv`).
 
-* `record.png`:
+* **`record.png`:** Image of the recording icon on the recording GUI.
 
-* WAV files in `regenerated_wav` folder:
+* **WAV files in `regenerated_wav` folder:** The WAV files in the `regenerated_wav` folder are audio representations of the 
+CSV files in the `notes_summary_csv` folder. In particular, our tool reads CSV files in the `notes_summary_csv` folder and
+  regenerates the identified notes into a playable WAV file. Having these regenerated audio files allow users without MuseScore
+  access to examine the processed recording output.
 
-* `requirements.txt`:
+* **`requirements.txt`:** File containing the requirements for this project. Run `pip install -r requirements.txt`
+to install the contents of this file.
 
-* `run_script.sh`:
+* **`run_script.sh`:** GRACE
 
-* `script.js`:
+* **`script.js`:** GRACE
 
-* `tooltip.py`:
+* **`tooltip.py`:** 
 
 
 
