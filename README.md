@@ -26,3 +26,11 @@ the system will start recording your singing.
 When you are finished, close the recording interface, and the system will begin processing the recorded input.
 
 ### 4. Run MuseScore Plugin & Paste Transcribed Output (GRACE)
+
+
+### Note: What if I don't have MuseScore?
+If MuseScore is not possible, our system can still be used to transcribe and playback recorded audio. After recording 
+audio from the user, the system processes the audio and writes the parsed results to `notes_summary_csv/recording.csv`.
+Additionally, the processed audio information from the CSV is regenerated into a playable WAV file. This WAV file is
+written to `regenerated_wav/recording_regenerated.wav`. Therefore, even without installing MuseScore, it is still possible
+to assess the output of our system using the regenerated WAV file.
