@@ -200,7 +200,8 @@ def launch_voice_recorder():
             key = key_entry.get()
             metronome_tempo = int(metronome_entry.get())
             duration = int(int(duration_entry.get()) * 60 * beats_per_measure / metronome_tempo) # convert measures to seconds
-            print(duration)
+            
+            print(metronome_tempo, duration)
             tone = tone_entry.get()
             amp = 2
 
@@ -209,14 +210,13 @@ def launch_voice_recorder():
             scale_audio, scale_duration = generate_scale_tones(notes_scale, freq, metronome_tempo)
 
             # write key to text file
-            with open('audio_files/recording_key.txt', 'w') as f:
-                f.write(key)
-                f.close()
+            # with open('audio_files/recording_key.txt', 'w') as f:
+            #     f.write(key)
+            #     f.close()
             
             # write both key and metronome to text file
             with open('audio_files/recording_info.txt', 'w') as f:
-                f.write(key)
-                f.write(metronome_tempo)
+                f.write(f"{key}\n{metronome_tempo}")
                 f.close()
 
 

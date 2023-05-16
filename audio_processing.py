@@ -78,6 +78,7 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
 
     key = lines[0]
     tempo = lines[1]
+    tempo = 120
     scale = get_scale_notes(key)
 
     # (timestamp start, timestamp end, note frequency, note letter, frequencies included)

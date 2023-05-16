@@ -93,5 +93,6 @@ MuseScore {
 
     console.log(c.tempo);
     curScore.endCmd();
+    Qt.quit();
   }
 }
