@@ -60,14 +60,13 @@ def process_fundamental_freqs(f0_freq, f0_time):
     return new_f0s, new_times
 
 
-def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
+def segment_notes(note_onsets, f0s_freq, f0_time):
     """
     Given a list of onsets and all of the fundamental frequencies and timestamps of those frequencies,
     generate a CSV with the start and end timestamps of a note as well as the note frequency and letter
     :param note_onsets: estimated beat event locations in time (seconds)
     :param f0s_freq: fundamental frequencies
     :param f0_time: times that the fundamental frequencies occur
-    :param file_name: file name of output json for notes
     :return: pandas Dataframe and raw note_info list
     """
 
@@ -156,10 +155,6 @@ def segment_notes(note_onsets, f0s_freq, f0_time, file_name):
             json_obj_str += note_obj
         else:
             json_obj_str += "];"
-
-    f = open(f'js_files_notes/{file_name}', "w")
-    f.write(json_obj_str)
-    f.close()
 
     # make dataframe and CSV of information
     df_notes = pd.DataFrame(note_info, columns=['start_sec', 'end_sec', 'note_freq_hz', 'note_name', 'midi_note',
@@ -274,7 +269,7 @@ tempo, beats = librosa.beat.beat_track(y=y, sr=sr, units='time')
 final_beats = onsets
 # plot_beats(y, final_beats)
 
-notes_df, notes_info = segment_notes(final_beats, f0s, f0_times, 'recording.js')
+notes_df, notes_info = segment_notes(final_beats, f0s, f0_times)
 
 notes_df.to_csv('notes_summary_csv/recording.csv')
 # notes_df.to_csv('birthday.csv')
