@@ -37,13 +37,17 @@ recorded audio.
   `audio_processing.py` script can can process. In particular, the `recording.wav` file is the recorded audio from the user.
   The other WAV files (e.g. `birthday.wav`) are example recordings that can be used to test the `audio_processing.py` script.
 
-* **`audio_processing.py`:** 
+* **`audio_processing.py`:** Main script for our tool that reads in the recorded audio file from the `audio_files` folder and
+performs pitch segmentation, rhythm segmentation, and note smoothing to in-scale values. The segmented audio information is
+  outputted to CSV files stored in the `notes_summary_csv` folder.
 
-* **`audio_recording.py`:**
+* **`audio_recording.py`:** Script that generates the recording GUI for our tool. Creates input fields (consisting of text input, radiobuttons, 
+  and more). Script records user audio and outputs recording to the `audio_files` folder. User specified tempo and key are 
+  stored into the `audio_files/recording_info.txt` file.
 
 * **`insert_notes.qml`:** GRACE
 
-* **CSV files in `notes_summary_csv` folder:** The CSVs in this folder contain the results the `audio_processing.py` script.
+* **CSV files in `notes_summary_csv` folder:** The CSVs in this folder contain the results of the `audio_processing.py` script.
 In particular, the CSVs contain information about the start and end times of a note (relative to the beginning of the recording, 
   measured in seconds), the frequency of the detected note,
   the note name (string), the corresponding MIDI number for the note, and the frequencies included in the
@@ -58,16 +62,16 @@ CSV files in the `notes_summary_csv` folder. In particular, our tool reads CSV f
   access to examine the processed recording output.
 
 * **`requirements.txt`:** File containing the requirements for this project. Run `pip install -r requirements.txt`
-to install the contents of this file.
+to install the packages listed in this file.
 
 * **`run_script.sh`:** GRACE
 
 * **`script.js`:** GRACE
 
-* **`tooltip.py`:** 
-
-
-
+* **`tooltip.py`:** File that contains the Tooltip class used to generate recording GUI. This tooltip implementation is based on
+the Hovertip implementation from `idlelib.tooltip`. However, we mutated the styling of the tooltip. The code for the original tooltip
+  implementation can be found here: https://github.com/python/cpython/blob/main/Lib/idlelib/tooltip.py
+  
 # Installation & Setup Instructions
 
 ### 1. Clone the repository & install requirements
