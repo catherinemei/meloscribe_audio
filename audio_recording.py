@@ -4,7 +4,7 @@ import numpy as np
 from scipy.io.wavfile import write
 from tkinter import *
 from tkinter.messagebox import showinfo, showerror, askokcancel
-from PIL import ImageTk, Image
+from PIL import Image
 import time
 import threading
 import os
@@ -12,7 +12,7 @@ from idlelib.tooltip import Hovertip
 import customtkinter
 from tooltip import Hovertip
 
-# heavily based on https://www.thepythoncode.com/article/make-a-gui-voice-recorder-python
+# based on https://www.thepythoncode.com/article/make-a-gui-voice-recorder-python
 
 def get_scale_notes(key_str):
     """
