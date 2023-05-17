@@ -84,7 +84,7 @@ pip install -r requirements.txt
 
 ### 2. Install MuseScore & Plugin Setup
 
-Install MuseScore 3 here: [https://ftp.osuosl.org/pub/musescore/releases/MuseScore-3.2/](https://ftp.osuosl.org/pub/musescore/releases/MuseScore-3.2/).
+Install MuseScore 3 here: [https://musescore.org/en/3.6.2](https://musescore.org/en/3.6.2).
 
 Then, navigate to the `Plugin Creator` option under `Plugins`. 
 
