@@ -30,8 +30,9 @@ MuseScore {
   }
 
   onRun: {
-    // path to the audio file
+    // path to the audio file; REPLACE THIS with your absolute path to the meloscribe_audio folder
     var pathToMeloscribe = '/Users/20gracehuang/Downloads/Documents/MIT\ Files/2023-spring-classes/6.8510/meloscribe_audio';
+
     file.source = pathToMeloscribe + '/notes_summary_csv/recording.csv';
     var notes_new = file.read().split(/\r?\n/).slice(1);
     while(notes_new[notes_new.length - 1] === '') {  // remove any extra blank lines
@@ -39,10 +40,14 @@ MuseScore {
     }
     
 
-    // runCommand();
+    // runCommand(pathToMeloscribe); // Uncomment if running command works
+
+    // get Cursor information
     var c=curScore.newCursor();
     c.inputStateMode=Cursor.INPUT_STATE_SYNC_WITH_SCORE
     curScore.startCmd();
+
+
     var durationPairs = [];
     const tempo = c.tempo;
 
