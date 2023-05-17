@@ -45,7 +45,7 @@ performs pitch segmentation, rhythm segmentation, and note smoothing to in-scale
   and more). Script records user audio and outputs recording to the `audio_files` folder. User specified tempo and key are 
   stored into the `audio_files/recording_info.txt` file.
 
-* **`insert_notes.qml`:** GRACE
+* **`insert_notes.qml`:** MuseScore plugin for performing note insertion after recording. Can be run through MuseScore's Plugin Creator interface.
 
 * **CSV files in `notes_summary_csv` folder:** The CSVs in this folder contain the results of the `audio_processing.py` script.
 In particular, the CSVs contain information about the start and end times of a note (relative to the beginning of the recording, 
@@ -64,9 +64,8 @@ CSV files in the `notes_summary_csv` folder. In particular, our tool reads CSV f
 * **`requirements.txt`:** File containing the requirements for this project. Run `pip install -r requirements.txt`
 to install the packages listed in this file.
 
-* **`run_script.sh`:** GRACE
-
-* **`script.js`:** GRACE
+* **`run_script.sh`:** Bash script for changing directories to the correct meloscribe directory and then running the 
+`audio_processing` python file. 
 
 * **`tooltip.py`:** File that contains the Tooltip class used to generate recording GUI. This tooltip implementation is based on
 the Hovertip implementation from `idlelib.tooltip`. However, we mutated the styling of the tooltip. The code for the original tooltip
